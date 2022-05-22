@@ -1,0 +1,37 @@
+---
+- name: Provision
+  hosts: default
+  become: true
+  roles: ["runner"]
+  tasks:
+    - name: create runner folder
+      file:
+        state: directory
+        path: "{{ runner_path }}"
+        owner: root
+        group: root
+        mode: '0700'
+
+    - name: get current runner download url
+      register: _runner_tarballs_response
+      uri:
+        url: "https://api.github.com/repos/actions/runner/releases/latest"
+        method: GET
+        status_code: 200
+        headers:
+          Accept: application/vnd.github.v3+json
+
+    - name: register latest runner release
+      set_fact:
+        runner_latest_release_tag: "{{ _runner_tarballs_response | json_query('json.tag_name') }}"
+
+    - name: download & extract the runner tarball
+      unarchive:
+        src: "https://github.com/actions/runner/releases/download/{{ runner_latest_release_tag }}/actions-runner-linux-x64-{{ runner_latest_release_tag[1:] }}.tar.gz"
+        dest: "{{ runner_path }}"
+        remote_src: yes
+        mode: 0755
+
+    - name: install dependencies
+      command:
+        cmd: "{{ runner_path }}/bin/installdependencies.sh"
