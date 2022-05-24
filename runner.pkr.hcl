@@ -34,19 +34,5 @@ build {
     }
 
     post-processor "docker-push" { }
-
-    post-processor "manifest" {
-      output              = "target/manifest.json"
-      keep_input_artifact = true
-      strip_path          = true
-      custom_data = {
-        my_custom_data = "example"
-      }
-    }
-    post-processor "checksum" {
-      checksum_types      = ["sha1", "sha256"]
-      keep_input_artifact = true
-      output              = "target/{{.BuildName}}_{{.ChecksumType}}.checksum"
-    }
   }
 }
